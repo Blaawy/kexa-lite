@@ -1,0 +1,30 @@
+[package]
+name = "kexa-node"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+axum = { workspace = true }
+borsh = { workspace = true }
+clap = { workspace = true }
+hex = { workspace = true }
+kexa-consensus = { path = "../kexa-consensus" }
+kexa-p2p = { path = "../kexa-p2p" }
+kexa-proto = { path = "../kexa-proto" }
+kexa-storage = { path = "../kexa-storage" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[dependencies.reqwest]
+workspace = true
+features = ["json"]
+
+[dev-dependencies]
+ed25519-dalek = { workspace = true }
+rand = { workspace = true }

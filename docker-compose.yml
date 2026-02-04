@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  node1:
+    build: .
+    command: ["--rpc-addr", "0.0.0.0:8030", "--p2p-addr", "0.0.0.0:9030", "--data-dir", "/data", "--peers", ""]
+    ports:
+      - "8030:8030"
+      - "9030:9030"
+    volumes:
+      - node1-data:/data
+  node2:
+    build: .
+    command: ["--rpc-addr", "0.0.0.0:8031", "--p2p-addr", "0.0.0.0:9031", "--data-dir", "/data", "--peers", "node1:9030"]
+    ports:
+      - "8031:8031"
+      - "9031:9031"
+    depends_on:
+      - node1
+    volumes:
+      - node2-data:/data
+
+volumes:
+  node1-data:
+  node2-data:
