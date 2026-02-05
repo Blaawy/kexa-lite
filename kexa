@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+command -v docker >/dev/null 2>&1 || { echo "docker required"; exit 1; }
+command -v cargo >/dev/null 2>&1 || { echo "cargo required"; exit 1; }
+
+compose() {
+  if docker compose version >/dev/null 2>&1; then
+    docker compose "$@"
+  else
+    docker-compose "$@"
+  fi
+}
+
+wait_ready() {
+  local url="$1"
+  for _ in {1..50}; do
+    if curl -sf "${url}/ready" >/dev/null; then
+      return 0
+    fi
+    sleep 0.2
+  done
+  echo "❌ node not ready: ${url}"
+  exit 1
+}
+
+case "${1:-}" in
+  dev)
+    echo "✅ cargo fmt"
+    cargo fmt --check
+    echo "✅ cargo clippy"
+    cargo clippy -- -D warnings
+    echo "✅ cargo test"
+    cargo test
+
+    echo "✅ docker compose up"
+    compose up --build -d
+
+    wait_ready "http://127.0.0.1:8030"
+    wait_ready "http://127.0.0.1:8031"
+
+    cargo run -p kexa-wallet -- new --name alice >/dev/null
+    cargo run -p kexa-wallet -- new --name bob >/dev/null
+
+    ALICE_ADDR=$(cargo run -p kexa-wallet -- address --name alice)
+    BOB_ADDR=$(cargo run -p kexa-wallet -- address --name bob)
+
+    echo "✅ mine block to fund alice"
+    curl -s -X POST http://127.0.0.1:8030/mine_blocks \
+      -H 'Content-Type: application/json' \
+      -d "{\"count\":1,\"miner_address\":\"${ALICE_ADDR}\"}" >/dev/null
+
+    ALICE_BAL=$(cargo run -p kexa-wallet -- balance --name alice --node http://127.0.0.1:8030)
+    BOB_BAL=$(cargo run -p kexa-wallet -- balance --name bob --node http://127.0.0.1:8030)
+    echo "✅ balances before: alice=${ALICE_BAL} bob=${BOB_BAL}"
+
+    echo "✅ send tx"
+    cargo run -p kexa-wallet -- send --name alice --to "${BOB_ADDR}" --amount 10 --fee 1 --node http://127.0.0.1:8030 >/dev/null
+
+    echo "✅ mine confirmation"
+    curl -s -X POST http://127.0.0.1:8030/mine_blocks \
+      -H 'Content-Type: application/json' \
+      -d "{\"count\":1,\"miner_address\":\"${ALICE_ADDR}\"}" >/dev/null
+
+    ALICE_BAL_AFTER=$(cargo run -p kexa-wallet -- balance --name alice --node http://127.0.0.1:8030)
+    BOB_BAL_AFTER=$(cargo run -p kexa-wallet -- balance --name bob --node http://127.0.0.1:8030)
+    echo "✅ balances after: alice=${ALICE_BAL_AFTER} bob=${BOB_BAL_AFTER}"
+    ;;
+  down)
+    compose down
+    ;;
+  clean)
+    compose down -v
+    rm -rf "${ROOT_DIR}/data"
+    ;;
+  *)
+    echo "Usage: ./kexa {dev|down|clean}"
+    exit 1
+    ;;
+ esac
