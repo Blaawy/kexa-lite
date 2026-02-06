@@ -406,7 +406,7 @@ fn init_genesis(storage: &Storage) -> Result<()> {
         version: 0,
         prev_hash: Hash32::zero(),
         merkle_root: merkle,
-        timestamp: now_timestamp(),
+        timestamp: 0,
         bits: DIFFICULTY_BITS,
         nonce: 0,
         height: 0,
