@@ -203,7 +203,11 @@ async fn get_blocks(
     }
 
     let guard = state.inner.lock().await;
-    let (_h, tip_hash) = guard.storage.get_tip().map_err(internal_error)?.expect("tip");
+    let (_h, tip_hash) = guard
+        .storage
+        .get_tip()
+        .map_err(internal_error)?
+        .expect("tip");
 
     let mut out: Vec<BlockSummary> = Vec::with_capacity(limit);
     let mut cur = tip_hash;

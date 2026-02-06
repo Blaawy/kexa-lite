@@ -110,35 +110,33 @@ fn main() -> Result<()> {
                 );
             }
         }
-        Cmd::Block { hash, height, scan } => {
-            match (hash, height) {
-                (Some(h), None) => {
-                    let url = join_url(&rpc, &format!("/block/{h}"));
-                    let out = http_get_text(&url)?;
-                    println!("{out}");
+        Cmd::Block { hash, height, scan } => match (hash, height) {
+            (Some(h), None) => {
+                let url = join_url(&rpc, &format!("/block/{h}"));
+                let out = http_get_text(&url)?;
+                println!("{out}");
+            }
+            (None, Some(h)) => {
+                if scan == 0 || scan > 5000 {
+                    return Err(anyhow!("--scan must be 1..=5000"));
                 }
-                (None, Some(h)) => {
-                    if scan == 0 || scan > 5000 {
-                        return Err(anyhow!("--scan must be 1..=5000"));
-                    }
-                    let url = join_url(&rpc, &format!("/blocks?limit={scan}"));
-                    let blocks: Vec<BlockSummary> = http_get_json(&url)?;
-                    let found = blocks.into_iter().find(|b| b.height == h).ok_or_else(|| {
+                let url = join_url(&rpc, &format!("/blocks?limit={scan}"));
+                let blocks: Vec<BlockSummary> = http_get_json(&url)?;
+                let found = blocks.into_iter().find(|b| b.height == h).ok_or_else(|| {
                         anyhow!(
                             "height {h} not found within last {scan} blocks from tip (try bigger --scan)"
                         )
                     })?;
-                    let url = join_url(&rpc, &format!("/block/{}", found.hash));
-                    let out = http_get_text(&url)?;
-                    println!("{out}");
-                }
-                _ => {
-                    return Err(anyhow!(
-                        "Usage: kexa-cli block <hash>  OR  kexa-cli block --height <h> [--scan N]"
-                    ));
-                }
+                let url = join_url(&rpc, &format!("/block/{}", found.hash));
+                let out = http_get_text(&url)?;
+                println!("{out}");
             }
-        }
+            _ => {
+                return Err(anyhow!(
+                    "Usage: kexa-cli block <hash>  OR  kexa-cli block --height <h> [--scan N]"
+                ));
+            }
+        },
     }
 
     Ok(())
