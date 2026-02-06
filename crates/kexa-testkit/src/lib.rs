@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use std::{
+    net::TcpListener,
     path::PathBuf,
     process::{Child, Command},
     time::Duration,
@@ -20,6 +21,11 @@ pub fn build_node_binary() -> Result<PathBuf> {
     Ok(bin)
 }
 
+/// Ask the OS for a usable local TCP port (avoids Windows excluded port ranges).
+pub fn pick_free_port() -> Result<u16> {
+    let l = TcpListener::bind("127.0.0.1:0").context("bind ephemeral port")?;
+    Ok(l.local_addr().context("local_addr")?.port())
+}
 pub fn spawn_node(
     bin: &PathBuf,
     rpc: u16,

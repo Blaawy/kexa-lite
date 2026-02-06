@@ -4,7 +4,7 @@ use kexa_proto::{sign_tx, tx_signing_hash, Address, OutPoint, Transaction, TxIn,
 use rand::rngs::OsRng;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
-use std::{fs, path::PathBuf, time::Duration};
+use std::{collections::HashSet, fs, path::PathBuf, time::Duration};
 
 #[derive(Deserialize)]
 struct UtxoResponse {
@@ -26,16 +26,25 @@ fn temp_dir(name: &str) -> PathBuf {
     path
 }
 
+fn pick_unique_port(used: &mut HashSet<u16>) -> Result<u16> {
+    for _ in 0..100 {
+        let p = kexa_testkit::pick_free_port()?;
+        if used.insert(p) {
+            return Ok(p);
+        }
+    }
+    anyhow::bail!("could not pick unique free port");
+}
 #[tokio::test]
 async fn devnet_flow_two_nodes() -> Result<()> {
     let bin = kexa_testkit::build_node_binary()?;
     let node1_dir = temp_dir("node1");
     let node2_dir = temp_dir("node2");
-    let rpc1 = 18130 + rand::random::<u16>() % 1000;
-    let rpc2 = 19130 + rand::random::<u16>() % 1000;
-    let p2p1 = 28130 + rand::random::<u16>() % 1000;
-    let p2p2 = 29130 + rand::random::<u16>() % 1000;
-
+    let mut used = HashSet::new();
+    let rpc1 = pick_unique_port(&mut used)?;
+    let rpc2 = pick_unique_port(&mut used)?;
+    let p2p1 = pick_unique_port(&mut used)?;
+    let p2p2 = pick_unique_port(&mut used)?;
     let node1 = kexa_testkit::spawn_node(
         &bin,
         rpc1,
