@@ -41,6 +41,21 @@ This command runs:
 
 ## Join Testnet
 
+### Quick verify (10 seconds)
+
+After your node is running (RPC is local):
+
+```bash
+# build kexa-cli (no Rust installed)
+docker run --rm -v "$PWD":/app -w /app rust:1.85 bash -c "cargo build -p kexa-cli --release"
+
+# verify instantly
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 health
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 tip
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 blocks --last 20
+```
+
+
 ### Public seed
 - Seed: `193.123.75.158:9030`
 - Notes: P2P is public on 9030. RPC is intentionally not exposed publicly.
