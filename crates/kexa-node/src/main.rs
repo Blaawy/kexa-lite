@@ -26,7 +26,7 @@ use tokio::{
     net::{TcpListener, TcpStream},
     sync::Mutex,
 };
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 #[derive(Parser, Debug)]
 #[command(name = "kexa-node")]
@@ -649,7 +649,12 @@ async fn start_p2p_listener(state: AppState, addr: SocketAddr) -> Result<()> {
                 guard.live_peers.remove(&peer_id);
             }
             if let Err(err) = res {
-                error!("peer error: {err}");
+                let s = err.to_string();
+                if s.contains("unexpected height") || s.contains("prev hash mismatch") {
+                    debug!("peer sync noise: {s}");
+                } else {
+                    error!("peer error: {err}");
+                }
             }
         });
     }
@@ -809,7 +814,12 @@ async fn sync_with_peers(state: AppState) -> Result<()> {
                     guard.live_peers.remove(&peer_id);
                 }
                 if let Err(err) = res {
-                    error!("peer error: {err}");
+                    let s = err.to_string();
+                    if s.contains("unexpected height") || s.contains("prev hash mismatch") {
+                        debug!("peer sync noise: {s}");
+                    } else {
+                        error!("peer error: {err}");
+                    }
                 }
             });
         }
