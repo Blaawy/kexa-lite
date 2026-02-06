@@ -75,7 +75,8 @@ Example (connect to the public seed):
 Verify locally:
 ```bash
 curl -s http://127.0.0.1:8030/health
-curl -s http://127.0.0.1:8030/peers
+curl -s http://127.0.0.1:8030/peers        # config peers (startup --peers)
+curl -s http://127.0.0.1:8030/peers/live   # live connected peers
 curl -s http://127.0.0.1:8030/tip
 ```
 
