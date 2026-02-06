@@ -38,3 +38,28 @@ This command runs:
 ## Public Seed Node (Testnet / Seed)
 - Seed address: `193.123.75.158:9030`
 - Notes: P2P is public on 9030. RPC is intentionally not exposed publicly.
+
+## Join Testnet
+
+### Public seed
+- Seed: `193.123.75.158:9030`
+- Notes: P2P is public on 9030. RPC is intentionally not exposed publicly.
+
+### Run a node (RPC private)
+`kexa-node` flags (exact):
+- `--rpc-addr` (default: `127.0.0.1:8030`)
+- `--p2p-addr` (default: `0.0.0.0:9030`)
+- `--data-dir` (default: `./data`)
+- `--peers` = comma-separated list of `ip:port` (example: `"ip1:port,ip2:port"`)
+
+Example (connect to the public seed):
+```bash
+./target/release/kexa-node --rpc-addr 127.0.0.1:8030 --p2p-addr 0.0.0.0:9030 --data-dir ./data --peers "193.123.75.158:9030"
+```
+
+Verify locally:
+```bash
+curl -s http://127.0.0.1:8030/health
+curl -s http://127.0.0.1:8030/peers
+curl -s http://127.0.0.1:8030/tip
+```
