@@ -16,6 +16,7 @@ use kexa_proto::{
 use kexa_storage::Storage;
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::BTreeSet,
     net::SocketAddr,
     sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
@@ -53,6 +54,7 @@ struct ChainState {
     storage: Storage,
     mempool: Vec<Transaction>,
     peers: Vec<String>,
+    live_peers: BTreeSet<String>,
 }
 
 #[derive(Serialize)]
@@ -118,6 +120,7 @@ async fn main() -> Result<()> {
             storage,
             mempool: Vec::new(),
             peers,
+            live_peers: BTreeSet::new(),
         })),
     };
 
@@ -177,6 +180,7 @@ fn build_router(state: AppState) -> Router {
         .route("/submit_tx", post(submit_tx))
         .route("/mine_blocks", post(mine_blocks))
         .route("/peers", get(get_peers))
+        .route("/peers/live", get(get_live_peers))
         .with_state(state)
 }
 
@@ -335,6 +339,11 @@ async fn mine_blocks(
 async fn get_peers(state: axum::extract::State<AppState>) -> Json<Vec<String>> {
     let guard = state.inner.lock().await;
     Json(guard.peers.clone())
+}
+
+async fn get_live_peers(state: axum::extract::State<AppState>) -> Json<Vec<String>> {
+    let guard = state.inner.lock().await;
+    Json(guard.live_peers.iter().cloned().collect())
 }
 
 fn parse_hash32(hash: &str) -> Result<Hash32, (StatusCode, Json<ErrorResponse>)> {
@@ -622,10 +631,20 @@ async fn start_p2p_listener(state: AppState, addr: SocketAddr) -> Result<()> {
     let listener = TcpListener::bind(addr).await?;
     info!("p2p listening on {addr}");
     loop {
-        let (stream, _) = listener.accept().await?;
+        let (stream, peer_addr) = listener.accept().await?;
         let peer_state = state.clone();
         tokio::spawn(async move {
-            if let Err(err) = handle_peer(peer_state, stream).await {
+            let peer_id = peer_addr.to_string();
+            {
+                let mut guard = peer_state.inner.lock().await;
+                guard.live_peers.insert(peer_id.clone());
+            }
+            let res = handle_peer(peer_state.clone(), stream).await;
+            {
+                let mut guard = peer_state.inner.lock().await;
+                guard.live_peers.remove(&peer_id);
+            }
+            if let Err(err) = res {
                 error!("peer error: {err}");
             }
         });
@@ -774,8 +793,18 @@ async fn sync_with_peers(state: AppState) -> Result<()> {
     for peer in peers {
         if let Ok(stream) = TcpStream::connect(&peer).await {
             let peer_state = state.clone();
+            let peer_id = peer.clone();
             tokio::spawn(async move {
-                if let Err(err) = handle_peer(peer_state, stream).await {
+                {
+                    let mut guard = peer_state.inner.lock().await;
+                    guard.live_peers.insert(peer_id.clone());
+                }
+                let res = handle_peer(peer_state.clone(), stream).await;
+                {
+                    let mut guard = peer_state.inner.lock().await;
+                    guard.live_peers.remove(&peer_id);
+                }
+                if let Err(err) = res {
                     error!("peer error: {err}");
                 }
             });
@@ -855,6 +884,7 @@ mod tests {
                 storage,
                 mempool: Vec::new(),
                 peers: Vec::new(),
+                live_peers: BTreeSet::new(),
             })),
         }
     }
@@ -962,6 +992,7 @@ mod tests {
                 storage,
                 mempool: Vec::new(),
                 peers: Vec::new(),
+                live_peers: BTreeSet::new(),
             })),
         };
 
