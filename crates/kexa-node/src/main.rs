@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use axum::http::StatusCode;
 use axum::{
-    extract::Path,
+    extract::{Path, Query},
     routing::{get, post},
     Json, Router,
 };
@@ -59,6 +59,19 @@ struct ChainState {
 struct TipResponse {
     height: u64,
     hash: String,
+}
+
+#[derive(Deserialize)]
+struct BlocksQuery {
+    limit: Option<usize>,
+}
+
+#[derive(Serialize)]
+struct BlockSummary {
+    height: u64,
+    hash: String,
+    tx_count: usize,
+    timestamp: u64,
 }
 
 #[derive(Serialize)]
@@ -157,6 +170,7 @@ fn build_router(state: AppState) -> Router {
         .route("/health", get(|| async { "ok" }))
         .route("/ready", get(ready))
         .route("/tip", get(get_tip))
+        .route("/blocks", get(get_blocks))
         .route("/block/:hash", get(get_block))
         .route("/balance/:address", get(get_balance))
         .route("/utxos/:address", get(get_utxos))
@@ -173,6 +187,51 @@ async fn get_tip(state: axum::extract::State<AppState>) -> Json<TipResponse> {
         height,
         hash: hex::encode(hash.0),
     })
+}
+
+async fn get_blocks(
+    Query(q): Query<BlocksQuery>,
+    state: axum::extract::State<AppState>,
+) -> Result<Json<Vec<BlockSummary>>, (StatusCode, Json<ErrorResponse>)> {
+    let limit = q.limit.unwrap_or(20);
+    if limit == 0 || limit > 500 {
+        return Err(bad_request("limit must be 1..=500"));
+    }
+
+    let guard = state.inner.lock().await;
+    let (_h, tip_hash) = guard.storage.get_tip().map_err(internal_error)?.expect("tip");
+
+    let mut out: Vec<BlockSummary> = Vec::with_capacity(limit);
+    let mut cur = tip_hash;
+
+    for _ in 0..limit {
+        let block = guard
+            .storage
+            .get_block(&cur)
+            .map_err(internal_error)?
+            .ok_or_else(|| {
+                (
+                    StatusCode::NOT_FOUND,
+                    Json(ErrorResponse {
+                        error: "block not found".to_string(),
+                    }),
+                )
+            })?;
+
+        out.push(BlockSummary {
+            height: block.header.height,
+            hash: hex::encode(cur.0),
+            tx_count: block.txs.len(),
+            timestamp: block.header.timestamp,
+        });
+
+        if block.header.height == 0 {
+            break;
+        }
+        cur = block.header.prev_hash;
+    }
+
+    Ok(Json(out))
 }
 
 async fn get_block(

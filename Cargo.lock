@@ -956,6 +956,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "kexa-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "reqwest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "kexa-consensus"
 version = "0.1.0"
 dependencies = [

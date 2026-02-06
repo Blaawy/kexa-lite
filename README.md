@@ -63,3 +63,30 @@ curl -s http://127.0.0.1:8030/health
 curl -s http://127.0.0.1:8030/peers
 curl -s http://127.0.0.1:8030/tip
 ```
+
+## Mini-Explorer (CLI)
+
+The RPC now supports browsing recent blocks:
+
+- `GET /blocks?limit=N` → last N blocks from tip (summary: height/hash/tx_count/timestamp)
+- `GET /block/:hash` → full block by hash
+
+
+### Build `kexa-cli` (no Rust installed)
+
+```bash
+docker run --rm -v "$PWD":/app -w /app rust:1.85 bash -c "cargo build -p kexa-cli --release"
+```
+
+Binary will be at:
+- `./target/release/kexa-cli`
+
+### Verify testnet activity in seconds
+
+```bash
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 health
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 tip
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 blocks --last 20
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 block --height 0
+```
+
