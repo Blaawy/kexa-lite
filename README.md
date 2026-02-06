@@ -34,3 +34,7 @@ This command runs:
 - `docs/CONTRIBUTING.md`
 - `docs/ROADMAP.md`
 - `docs/LAUNCH_TESTNET.md`
+
+## Public Seed Node (Testnet / Seed)
+- Seed address: `193.123.75.158:9030`
+- Notes: P2P is public on 9030. RPC is intentionally not exposed publicly.
