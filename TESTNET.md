@@ -35,3 +35,22 @@ curl -s http://127.0.0.1:8030/block/1b9c1803328d95518a0fd921ce8fd1d5f93c9a88ca02
 ```bash
 bash scripts/testnet_status.sh
 ```
+## Mini-Explorer (CLI)
+
+After your node is running (RPC is local), you can browse the chain without guessing hashes:
+
+```bash
+# build kexa-cli (no Rust installed)
+docker run --rm -v "$PWD":/app -w /app rust:1.85 bash -c "cargo build -p kexa-cli --release"
+
+# browse via your local RPC (example: 127.0.0.1:8030)
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 health
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 tip
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 blocks --last 20
+./target/release/kexa-cli --rpc http://127.0.0.1:8030 block --height 0
+```
+
+RPC endpoints used:
+- `GET /blocks?limit=N`
+- `GET /block/:hash`
+
