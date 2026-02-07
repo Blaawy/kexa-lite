@@ -680,9 +680,25 @@ async fn handle_peer(state: AppState, mut stream: TcpStream) -> Result<()> {
 
     loop {
         let mut len_bytes = [0u8; 4];
-        if stream.read_exact(&mut len_bytes).await.is_err() {
-            break;
+        match tokio::time::timeout(
+            std::time::Duration::from_secs(2),
+            stream.read_exact(&mut len_bytes),
+        )
+        .await
+        {
+            Ok(Ok(_n)) => {}     // got bytes, continue normal decode path
+            Ok(Err(_)) => break, // socket closed / read error
+            Err(_) => {
+                // idle: poll tip so new blocks propagate without reconnect storms
+                let msg = Message::GetTip;
+                let data = encode_message(&msg)?;
+                if stream.write_all(&data).await.is_err() {
+                    break;
+                }
+                continue;
+            }
         }
+
         let len = u32::from_be_bytes(len_bytes) as usize;
         if len > MAX_MESSAGE_SIZE {
             anyhow::bail!("message too large");
