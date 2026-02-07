@@ -1,0 +1,5 @@
+services:
+  node1:
+    command: ["--rpc-addr","0.0.0.0:8030","--p2p-addr","0.0.0.0:9030","--data-dir","/data","--peers","193.123.75.158:9030"]
+  node2:
+    command: ["--rpc-addr","0.0.0.0:8031","--p2p-addr","0.0.0.0:9031","--data-dir","/data","--peers","193.123.75.158:9030"]
