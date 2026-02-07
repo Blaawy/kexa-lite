@@ -1,0 +1,5 @@
+services:
+  node1:
+    user: "0:0"
+  node2:
+    user: "0:0"
