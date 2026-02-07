@@ -1,0 +1,27 @@
+name: kexa-seed
+services:
+  seed1:
+    environment:
+      - RUST_LOG=kexa_node=info,sled::config=off
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    command:
+      - --rpc-addr
+      - 0.0.0.0:8030
+      - --p2p-addr
+      - 0.0.0.0:9030
+      - --data-dir
+      - /data
+      - --peers
+      - ""
+    ports:
+      - "127.0.0.1:18030:8030/tcp"
+      - "0.0.0.0:9030:9030/tcp"
+    volumes:
+      - seed1-data:/data
+    restart: unless-stopped
+    user: "1000:1000"
+volumes:
+  seed1-data: {}
