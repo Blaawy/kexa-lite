@@ -54,3 +54,15 @@ RPC endpoints used:
 - `GET /blocks?limit=N`
 - `GET /block/:hash`
 
+
+## Windows quick verify
+
+Seed (P2P): `193.123.75.158:9030`  
+Local RPC default: `http://127.0.0.1:8030`
+
+Run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\local_status.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\join_verify_testnet.ps1
+```
