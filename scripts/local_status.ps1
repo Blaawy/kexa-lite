@@ -1,8 +1,21 @@
 param(
   [string]$Rpc = "http://127.0.0.1:8030",
-  [string]$Seed = "193.123.75.158:9030"
+  [string]$Seed = "193.123.75.158:9030,141.145.159.171:9030"
 )
 
+
+# --- multi-seed shim (comma-separated "A:9030,B:9030") ---
+$SeedList = $Seed -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+
+$picked = $null
+foreach ($hp in $SeedList) {
+  $i = $hp.LastIndexOf(':'); if ($i -lt 1) { continue }
+  $h = $hp.Substring(0,$i)
+  $port = [int]$hp.Substring($i+1)
+  if (Test-NetConnection -ComputerName $h -Port $port -InformationLevel Quiet) { $picked = $hp; break }
+}
+if ($picked) { $Seed = $picked } else { $Seed = $SeedList[0] }
+# --- end multi-seed shim ---
 function Get-Raw([string]$Url) {
   try { (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 $Url).Content }
   catch { $null }

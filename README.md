@@ -36,7 +36,7 @@ This command runs:
 - `docs/LAUNCH_TESTNET.md`
 
 ## Public Seed Node (Testnet / Seed)
-- Seed address: `193.123.75.158:9030`
+- Seed address: `193.123.75.158:9030,141.145.159.171:9030`
 - Notes: P2P is public on 9030. RPC is intentionally not exposed publicly.
 
 ## Join Testnet
@@ -57,7 +57,7 @@ docker run --rm -v "$PWD":/app -w /app rust:1.85 bash -c "cargo build -p kexa-cl
 
 
 ### Public seed
-- Seed: `193.123.75.158:9030`
+- Seed: `193.123.75.158:9030,141.145.159.171:9030`
 - Notes: P2P is public on 9030. RPC is intentionally not exposed publicly.
 
 ### Run a node (RPC private)
@@ -69,7 +69,7 @@ docker run --rm -v "$PWD":/app -w /app rust:1.85 bash -c "cargo build -p kexa-cl
 
 Example (connect to the public seed):
 ```bash
-./target/release/kexa-node --rpc-addr 127.0.0.1:8030 --p2p-addr 0.0.0.0:9030 --data-dir ./data --peers "193.123.75.158:9030"
+./target/release/kexa-node --rpc-addr 127.0.0.1:8030 --p2p-addr 0.0.0.0:9030 --data-dir ./data --peers "193.123.75.158:9030,141.145.159.171:9030"
 ```
 
 Verify locally:
@@ -109,7 +109,7 @@ Binary will be at:
 
 ## Windows quick verify
 
-Seed (P2P): `193.123.75.158:9030`  
+Seed (P2P): `193.123.75.158:9030,141.145.159.171:9030`  
 Local RPC default: `http://127.0.0.1:8030`
 
 Run:

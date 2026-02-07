@@ -1,7 +1,7 @@
 # KEXA / KEXA-Lite v0 — Testnet
 
 ## Seed
-- P2P: 193.123.75.158:9030
+- P2P: 193.123.75.158:9030,141.145.159.171:9030
 
 ## Default ports
 - P2P (public): 9030
@@ -23,7 +23,7 @@ kexa-node \
   --rpc-addr 127.0.0.1:8030 \
   --p2p-addr 0.0.0.0:9030 \
   --data-dir ./kexa-testnet-data \
-  --peers "193.123.75.158:9030"
+  --peers "193.123.75.158:9030,141.145.159.171:9030"
 ```
 
 ## Verify you’re on the right chain
@@ -57,7 +57,7 @@ RPC endpoints used:
 
 ## Windows quick verify
 
-Seed (P2P): `193.123.75.158:9030`  
+Seed (P2P): `193.123.75.158:9030,141.145.159.171:9030`  
 Local RPC default: `http://127.0.0.1:8030`
 
 Run:
