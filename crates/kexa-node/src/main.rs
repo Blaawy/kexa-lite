@@ -650,7 +650,10 @@ async fn start_p2p_listener(state: AppState, addr: SocketAddr) -> Result<()> {
             }
             if let Err(err) = res {
                 let s = err.to_string();
-                if s.contains("unexpected height") || s.contains("prev hash mismatch") || s.contains("message too large") {
+                if s.contains("unexpected height")
+                    || s.contains("prev hash mismatch")
+                    || s.contains("message too large")
+                {
                     debug!("peer sync noise: {s}");
                 } else {
                     error!("peer error: {err}");
@@ -839,7 +842,10 @@ async fn sync_with_peers(state: AppState) -> Result<()> {
                 }
                 if let Err(err) = res {
                     let s = err.to_string();
-                    if s.contains("unexpected height") || s.contains("prev hash mismatch") || s.contains("message too large") {
+                    if s.contains("unexpected height")
+                        || s.contains("prev hash mismatch")
+                        || s.contains("message too large")
+                    {
                         debug!("peer sync noise: {s}");
                     } else {
                         error!("peer error: {err}");
