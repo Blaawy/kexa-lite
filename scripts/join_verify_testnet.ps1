@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$Seed = "193.123.75.158:9030",
   [string]$Rpc = "http://127.0.0.1:8030",
   [int]$WaitSec = 8
