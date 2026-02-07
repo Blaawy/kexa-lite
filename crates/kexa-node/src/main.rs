@@ -800,6 +800,14 @@ async fn sync_with_peers(state: AppState) -> Result<()> {
         guard.peers.clone()
     };
     for peer in peers {
+        let already_connected = {
+            let guard = state.inner.lock().await;
+            guard.live_peers.contains(&peer)
+        };
+        if already_connected {
+            continue;
+        }
+
         if let Ok(stream) = TcpStream::connect(&peer).await {
             let peer_state = state.clone();
             let peer_id = peer.clone();
