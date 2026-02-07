@@ -10,7 +10,12 @@ function Get-Raw([string]$Url) {
 }
 
 Write-Host "== Step 1: start node (docker compose remote1) =="
-docker compose -f docker-compose.yml -f docker-compose.remote1.root.yml -f docker-compose.remote1.joinseed.yml up -d --build
+$join = "docker-compose.remote1.joinseed.yml"
+if (Test-Path $join) {
+  docker compose -f docker-compose.yml -f docker-compose.remote1.root.yml -f $join up -d --build
+} else {
+  docker compose -f docker-compose.yml -f docker-compose.remote1.root.yml up -d --build
+}
 
 Write-Host ""
 Write-Host "== Step 2: wait $WaitSec sec =="
