@@ -106,3 +106,15 @@ Binary will be at:
 ./target/release/kexa-cli --rpc http://127.0.0.1:8030 block --height 0
 ```
 
+
+## Windows quick verify
+
+Seed (P2P): `193.123.75.158:9030`  
+Local RPC default: `http://127.0.0.1:8030`
+
+Run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\local_status.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\join_verify_testnet.ps1
+```
