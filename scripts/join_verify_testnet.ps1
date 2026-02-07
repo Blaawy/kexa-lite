@@ -4,6 +4,9 @@ param(
   [int]$WaitSec = 8
 )
 
+
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
 function Get-Raw([string]$Url) {
   try { (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 $Url).Content }
   catch { $null }
