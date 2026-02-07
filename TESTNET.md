@@ -66,3 +66,10 @@ Run:
 powershell -ExecutionPolicy Bypass -File .\scripts\local_status.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\join_verify_testnet.ps1
 ```
+
+## Seed VPS (ops notes)
+
+- Seed runs as non-root inside Docker: `user: "1000:1000"`
+- VPS uses a systemd `ExecStartPre` perms fix (`/usr/local/bin/kexa-fix-perms`) so the sled DB stays writable across restarts.
+- RPC stays private: `127.0.0.1:18030` (host) → `8030` (container), and P2P is public on `9030`.
+
