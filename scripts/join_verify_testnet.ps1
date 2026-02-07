@@ -13,11 +13,24 @@ function Get-Raw([string]$Url) {
 }
 
 Write-Host "== Step 1: start node (docker compose remote1) =="
+
 $join = "docker-compose.remote1.joinseed.yml"
-if (Test-Path $join) {
-  docker compose -f docker-compose.yml -f docker-compose.remote1.root.yml -f $join up -d --build
-} else {
-  docker compose -f docker-compose.yml -f docker-compose.remote1.root.yml up -d --build
+$cmd  = @("compose","-f","docker-compose.yml","-f","docker-compose.remote1.root.yml")
+if (Test-Path $join) { $cmd += @("-f",$join) }
+
+# run quietly; docker prints build progress to stderr (can look like errors in PS)
+$oldEap = $ErrorActionPreference
+$ErrorActionPreference = "SilentlyContinue"
+
+& docker @cmd up -d --build --quiet-pull *> $null
+$code = $LASTEXITCODE
+
+$ErrorActionPreference = $oldEap
+
+if ($code -ne 0) {
+  Write-Host "compose failed; re-running verbose for logs..."
+  & docker @cmd up -d --build
+  exit $code
 }
 
 Write-Host ""
