@@ -11,3 +11,7 @@ Truth order when HC is red:
 3) curl /health + /tip + /peers/live
 4) docker logs --tail 200
 5) restart seed unit if needed, re-check
+
+## Notes
+
+- Seed2 defaults were fixed: /usr/local/bin/kexa-monitor now defaults to kexa-seed2.service + 127.0.0.1:18031.
