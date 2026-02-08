@@ -1,7 +1,6 @@
 ## About KEXA
 
-**KEXA** is a Layer-1 blockchain built around one principle: **truth over vibes**.  
-KEXA-Lite (v0) is the reference node implementation that prioritizes determinism, verification, and operational reliability—so anyone can join, verify, and run nodes without guesswork.
+##KEXA is an open-source Layer-1 blockchain designed to be simple, verifiable, and operator-friendly.
 
 KEXA-Lite includes the essentials of a real L1:
 - P2P networking and chain syncing
