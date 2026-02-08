@@ -118,3 +118,7 @@ Run:
 powershell -ExecutionPolicy Bypass -File .\scripts\local_status.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\join_verify_testnet.ps1
 ```
+
+## Operations
+
+- Ops Runbook: OPS_RUNBOOK.md
