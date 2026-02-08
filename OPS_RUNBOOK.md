@@ -15,3 +15,22 @@ Truth order when HC is red:
 ## Notes
 
 - Seed2 defaults were fixed: /usr/local/bin/kexa-monitor now defaults to kexa-seed2.service + 127.0.0.1:18031.
+
+<!-- BEGIN_V8_INCIDENT_RESPONSE_ADDENDUM -->
+## v8 Incident Response (Fast Path)
+
+**Truth rule:** `kexa-seed*.service` is oneshot → systemd can look “active” while the container is dead. **Truth = Docker + RPC.**
+
+**When Healthchecks is red:**
+- Run: `ks --strict`
+- If FAIL, paste back (evidence bundle):
+  - `ks --strict` output
+  - `journalctl -u kexa-monitor.service -n 20 --no-pager`
+  - `docker ps | grep -i kexa`
+  - `docker logs --tail=120 <container_name>`
+
+**Restart (seed-specific):**
+- Seed1: `sudo systemctl restart kexa-seed.service`
+- Seed2: `sudo systemctl restart kexa-seed2.service`
+Then re-run: `ks --strict`
+<!-- END_V8_INCIDENT_RESPONSE_ADDENDUM -->
