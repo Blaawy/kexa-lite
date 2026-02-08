@@ -1,6 +1,15 @@
-# KEXA-Lite v0
+## About KEXA
 
-KEXA-Lite is a minimal UTXO-based devnet/testnet chain built for low complexity and a small attack surface. v0 intentionally excludes privacy, smart contracts, tokens, staking, and governance.
+**KEXA** is a Layer-1 blockchain built around one principle: **truth over vibes**.  
+KEXA-Lite (v0) is the reference node implementation that prioritizes determinism, verification, and operational reliability—so anyone can join, verify, and run nodes without guesswork.
+
+KEXA-Lite includes the essentials of a real L1:
+- P2P networking and chain syncing
+- Wallet + transactions + confirmations
+- Minimal RPC visibility (health/tip/blocks) for verification
+- Operator tooling for monitoring and incident response
+
+Economics and mainnet hardening are the current focus. Privacy is part of the long-term vision, intentionally deferred to v1.
 
 ## Quickstart (One-Click)
 ```bash
