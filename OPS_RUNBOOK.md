@@ -34,3 +34,18 @@ Truth order when HC is red:
 - Seed2: `sudo systemctl restart kexa-seed2.service`
 Then re-run: `ks --strict`
 <!-- END_V8_INCIDENT_RESPONSE_ADDENDUM -->
+
+<!-- BEGIN_V8_LOG_RETENTION_POLICY -->
+## v8 Ops Addendum — Log Retention (journald)
+
+Goal: keep enough history for incidents without filling disk.
+
+Recommended policy:
+- Vacuum size: `journalctl --vacuum-size=200M`
+- Vacuum time: `journalctl --vacuum-time=14d`
+
+Optional (persist across reboots): set in `/etc/systemd/journald.conf`:
+- `SystemMaxUse=200M`
+- `SystemMaxFileSize=50M`
+Then: `sudo systemctl restart systemd-journald`
+<!-- END_V8_LOG_RETENTION_POLICY -->
