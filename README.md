@@ -1,6 +1,6 @@
 ## About KEXA
 
-##KEXA is an open-source Layer-1 blockchain designed to be simple, verifiable, and operator-friendly.
+**KEXA** is an open-source Layer-1 blockchain designed to be simple, verifiable, and operator-friendly.
 
 KEXA-Lite includes the essentials of a real L1:
 - P2P networking and chain syncing
