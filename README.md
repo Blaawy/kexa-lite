@@ -112,6 +112,19 @@ Binary will be at:
 Seed (P2P): `193.123.75.158:9030,141.145.159.171:9030`  
 Local RPC default: `http://127.0.0.1:8030`
 
+## Quick verify (10 seconds)
+
+From any machine with access to the seed P2P network (local node running):
+
+```bash
+# check seed tip + peers
+curl -fsS http://127.0.0.1:8030/tip && echo
+curl -fsS http://127.0.0.1:8030/peers/live && echo
+
+# prove deterministic genesis (height 0) exists
+curl -fsS "http://127.0.0.1:8030/blocks?limit=50" | tail -c 300; echo
+```
+
 Run:
 
 ```powershell
