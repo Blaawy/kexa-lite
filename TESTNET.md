@@ -147,3 +147,7 @@ sudo journalctl -u kexa-seed2.service -n 120 --no-pager || true
 sudo systemctl start kexa-monitor.service
 
 ```
+
+## Ops Runbook
+
+See: OPS_RUNBOOK.md
