@@ -8,8 +8,7 @@ use axum::{
 use borsh::BorshDeserialize;
 use clap::Parser;
 use kexa_consensus::{
-    block_subsidy, check_pow, merkle_root, COINBASE_MATURITY, DIFFICULTY_BITS, MINEABLE_BLOCKS,
-    SUBSIDY,
+    block_subsidy, check_pow, merkle_root, COINBASE_MATURITY, DIFFICULTY_BITS, SUBSIDY,
 };
 use kexa_p2p::{encode_message, Message, MAX_MESSAGE_SIZE};
 use kexa_proto::{
@@ -912,6 +911,7 @@ mod tests {
     use axum::http::Request;
     use ed25519_dalek::SigningKey;
     use http_body_util::BodyExt;
+    use kexa_consensus::MINEABLE_BLOCKS;
     use kexa_proto::TxIn;
     use rand::rngs::OsRng;
     use std::fs;

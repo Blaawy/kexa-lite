@@ -3,3 +3,4 @@
 .DS_Store
 docker-compose.remote.yml
 remote-data/
+.cargo-target/
