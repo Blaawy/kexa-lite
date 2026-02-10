@@ -6,10 +6,8 @@ use axum::{
     Json, Router,
 };
 use borsh::BorshDeserialize;
-use clap::Parser;
-use kexa_consensus::{
-    block_subsidy, check_pow, merkle_root, COINBASE_MATURITY, DIFFICULTY_BITS, SUBSIDY,
-};
+use clap::{Parser, ValueEnum};
+use kexa_consensus::{block_subsidy, check_pow, merkle_root, COINBASE_MATURITY, DIFFICULTY_BITS};
 use kexa_p2p::{encode_message, Message, MAX_MESSAGE_SIZE};
 use kexa_proto::{
     tx_signing_hash, verify_tx_signature, Address, Block, BlockHeader, Hash32, OutPoint,
@@ -30,6 +28,13 @@ use tokio::{
 };
 use tracing::{debug, error, info};
 
+mod genesis;
+
+use crate::genesis::{
+    build_genesis_from_spec, build_testnet_genesis, load_genesis_spec, GenesisSpec,
+    TESTNET_GENESIS_HASH_HEX,
+};
+
 #[derive(Parser, Debug)]
 #[command(name = "kexa-node")]
 struct Args {
@@ -45,6 +50,24 @@ struct Args {
     miner_address: Option<String>,
     #[arg(long, default_value = "")]
     peers: String,
+    #[arg(long, value_enum, default_value_t = Network::Testnet)]
+    network: Network,
+    #[arg(long)]
+    genesis: Option<String>,
+    #[arg(long)]
+    print_genesis: bool,
+}
+
+#[derive(Copy, Clone, Debug, ValueEnum, PartialEq, Eq)]
+enum Network {
+    Testnet,
+    Mainnet,
+}
+
+#[derive(Clone)]
+enum NetworkMode {
+    Testnet,
+    Mainnet { spec: GenesisSpec },
 }
 
 #[derive(Clone)]
@@ -106,8 +129,15 @@ async fn main() -> Result<()> {
         .init();
     let args = Args::parse();
 
+    let mode = build_network_mode(&args)?;
+
+    if args.print_genesis {
+        print_genesis(&mode)?;
+        return Ok(());
+    }
+
     let storage = Storage::open(&args.data_dir)?;
-    init_genesis(&storage)?;
+    init_genesis(&storage, &mode)?;
     let peers = if args.peers.is_empty() {
         Vec::new()
     } else {
@@ -158,6 +188,64 @@ async fn main() -> Result<()> {
     info!("rpc listening on {rpc_addr}");
     let listener = tokio::net::TcpListener::bind(rpc_addr).await?;
     axum::serve(listener, app).await?;
+    Ok(())
+}
+
+fn build_network_mode(args: &Args) -> Result<NetworkMode> {
+    match args.network {
+        Network::Testnet => {
+            if args.genesis.is_some() {
+                info!("ignoring --genesis in testnet mode");
+            }
+            Ok(NetworkMode::Testnet)
+        }
+        Network::Mainnet => {
+            let genesis_path = args
+                .genesis
+                .as_ref()
+                .context("--genesis <path> is required when --network mainnet")?;
+            let spec = load_genesis_spec(genesis_path)?;
+            Ok(NetworkMode::Mainnet { spec })
+        }
+    }
+}
+
+fn expected_genesis(mode: &NetworkMode) -> Result<(Block, Hash32)> {
+    match mode {
+        NetworkMode::Testnet => {
+            let (block, hash) = build_testnet_genesis();
+            anyhow::ensure!(
+                hex::encode(hash.0) == TESTNET_GENESIS_HASH_HEX,
+                "testnet genesis hash drifted from locked baseline"
+            );
+            Ok((block, hash))
+        }
+        NetworkMode::Mainnet { spec } => build_genesis_from_spec(spec),
+    }
+}
+
+fn print_genesis(mode: &NetworkMode) -> Result<()> {
+    let (block, hash) = expected_genesis(mode)?;
+    let network = match mode {
+        NetworkMode::Testnet => "testnet",
+        NetworkMode::Mainnet { .. } => "mainnet",
+    };
+    println!("network: {network}");
+    println!("genesis_hash: {}", hex::encode(hash.0));
+    println!(
+        "header: version={} timestamp={} bits={} nonce={}",
+        block.header.version, block.header.timestamp, block.header.bits, block.header.nonce
+    );
+    for (idx, output) in block.txs[0].outputs.iter().enumerate() {
+        let address = Address {
+            payload: output.address,
+        }
+        .to_bech32();
+        println!(
+            "coinbase_output[{idx}]: amount={} address={address}",
+            output.amount
+        );
+    }
     Ok(())
 }
 
@@ -391,37 +479,36 @@ fn now_timestamp() -> u64 {
         .as_secs()
 }
 
-fn init_genesis(storage: &Storage) -> Result<()> {
+fn init_genesis(storage: &Storage, mode: &NetworkMode) -> Result<()> {
+    let (block, expected_hash) = expected_genesis(mode)?;
+
     if storage.get_tip()?.is_some() {
+        let stored_hash = if let Some(hash) = storage.get_hash_by_height(0)? {
+            hash
+        } else {
+            storage
+                .get_header(0)?
+                .map(|header| header.hash())
+                .context("existing chain missing genesis at height 0")?
+        };
+        if stored_hash != expected_hash {
+            let network = match mode {
+                NetworkMode::Testnet => "testnet",
+                NetworkMode::Mainnet { .. } => "mainnet",
+            };
+            anyhow::bail!(
+                "genesis mismatch for network {network}: expected {}, found {}. choose correct --network/--genesis or wipe data-dir",
+                hex::encode(expected_hash.0),
+                hex::encode(stored_hash.0)
+            );
+        }
         return Ok(());
     }
-    let coinbase = Transaction {
-        version: 0,
-        inputs: vec![],
-        outputs: vec![TxOut {
-            amount: SUBSIDY,
-            address: [0u8; 32],
-        }],
-    };
-    let merkle = merkle_root(std::slice::from_ref(&coinbase));
-    let header = BlockHeader {
-        version: 0,
-        prev_hash: Hash32::zero(),
-        merkle_root: merkle,
-        timestamp: 0,
-        bits: DIFFICULTY_BITS,
-        nonce: 0,
-        height: 0,
-    };
-    let block = Block {
-        header,
-        txs: vec![coinbase],
-    };
-    let hash = block.header.hash();
-    storage.put_block(&hash, &block)?;
+
+    storage.put_block(&expected_hash, &block)?;
     storage.put_header(0, &block.header)?;
-    storage.put_height_hash(0, &hash)?;
-    storage.set_tip(0, &hash)?;
+    storage.put_height_hash(0, &expected_hash)?;
+    storage.set_tip(0, &expected_hash)?;
     Ok(())
 }
 
@@ -907,11 +994,12 @@ fn decide_tip_action(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::genesis::{GenesisHeaderSpec, GenesisOutputSpec, TESTNET_GENESIS_HASH_HEX};
     use axum::body::Body;
     use axum::http::Request;
     use ed25519_dalek::SigningKey;
     use http_body_util::BodyExt;
-    use kexa_consensus::MINEABLE_BLOCKS;
+    use kexa_consensus::{MINEABLE_BLOCKS, SUBSIDY};
     use kexa_proto::TxIn;
     use rand::rngs::OsRng;
     use std::fs;
@@ -926,7 +1014,7 @@ mod tests {
 
     fn test_state() -> AppState {
         let storage = temp_storage();
-        init_genesis(&storage).expect("genesis");
+        init_genesis(&storage, &NetworkMode::Testnet).expect("genesis");
         AppState {
             inner: Arc::new(Mutex::new(ChainState {
                 storage,
@@ -935,6 +1023,60 @@ mod tests {
                 live_peers: BTreeSet::new(),
             })),
         }
+    }
+
+    #[test]
+    fn testnet_genesis_hash_locked() {
+        let (_block, hash) = build_testnet_genesis();
+        assert_eq!(hex::encode(hash.0), TESTNET_GENESIS_HASH_HEX);
+    }
+
+    #[test]
+    fn mainnet_genesis_deterministic() {
+        let key = SigningKey::generate(&mut OsRng);
+        let address = Address::from_pubkey(&key.verifying_key()).to_bech32();
+        let spec = GenesisSpec {
+            network: "mainnet".to_string(),
+            header: GenesisHeaderSpec {
+                version: 0,
+                timestamp: 0,
+                bits: DIFFICULTY_BITS,
+                nonce: 0,
+            },
+            coinbase_outputs: vec![GenesisOutputSpec {
+                amount: kexa_consensus::FOUNDERS_RESERVE,
+                address_bech32: address,
+            }],
+        };
+        let (_, hash1) = build_genesis_from_spec(&spec).expect("build1");
+        let (_, hash2) = build_genesis_from_spec(&spec).expect("build2");
+        assert_eq!(hash1, hash2);
+    }
+
+    #[test]
+    fn rejects_network_mismatch_on_existing_data() {
+        let storage = temp_storage();
+        init_genesis(&storage, &NetworkMode::Testnet).expect("testnet genesis");
+        let key = SigningKey::generate(&mut OsRng);
+        let address = Address::from_pubkey(&key.verifying_key()).to_bech32();
+        let mode = NetworkMode::Mainnet {
+            spec: GenesisSpec {
+                network: "mainnet".to_string(),
+                header: GenesisHeaderSpec {
+                    version: 0,
+                    timestamp: 0,
+                    bits: DIFFICULTY_BITS,
+                    nonce: 0,
+                },
+                coinbase_outputs: vec![GenesisOutputSpec {
+                    amount: kexa_consensus::FOUNDERS_RESERVE,
+                    address_bech32: address,
+                }],
+            },
+        };
+
+        let err = init_genesis(&storage, &mode).unwrap_err();
+        assert!(err.to_string().contains("genesis mismatch"));
     }
 
     #[test]
@@ -975,7 +1117,7 @@ mod tests {
     #[test]
     fn rejects_coinbase_overpay() {
         let storage = temp_storage();
-        init_genesis(&storage).expect("genesis");
+        init_genesis(&storage, &NetworkMode::Testnet).expect("genesis");
         let (height, prev_hash) = storage.get_tip().expect("tip").expect("tip");
 
         let coinbase = Transaction {
@@ -1009,7 +1151,7 @@ mod tests {
     #[test]
     fn enforces_emission_end_boundary() {
         let storage = temp_storage();
-        init_genesis(&storage).expect("genesis");
+        init_genesis(&storage, &NetworkMode::Testnet).expect("genesis");
 
         // height = MINEABLE_BLOCKS: subsidy still allowed
         let tip_hash1 = Hash32([7u8; 32]);
@@ -1082,7 +1224,7 @@ mod tests {
     #[tokio::test]
     async fn rejects_unexpected_height_zero_block() {
         let storage = temp_storage();
-        init_genesis(&storage).expect("genesis");
+        init_genesis(&storage, &NetworkMode::Testnet).expect("genesis");
         let (tip_height, tip_hash) = storage.get_tip().expect("tip").expect("tip");
 
         let coinbase = Transaction {
@@ -1129,7 +1271,7 @@ mod tests {
     #[test]
     fn rejects_intra_block_double_spend() {
         let storage = temp_storage();
-        init_genesis(&storage).expect("genesis");
+        init_genesis(&storage, &NetworkMode::Testnet).expect("genesis");
         let (height, prev_hash) = storage.get_tip().expect("tip").expect("tip");
         let key = SigningKey::generate(&mut OsRng);
         let outpoint = OutPoint {
