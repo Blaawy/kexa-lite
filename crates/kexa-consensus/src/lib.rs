@@ -6,6 +6,28 @@ pub const DIFFICULTY_BITS: u32 = 16; // leading zero bits required in devnet
 pub const SUBSIDY: u64 = 50;
 pub const COINBASE_MATURITY: u64 = 0;
 
+/// Mainnet economics (Gate M1 locked params)
+pub const MAX_SUPPLY: u64 = 18_000_000;
+/// 1.5% of 18,000,000 (policy-only lock/vesting in v0; enforcement decision deferred)
+pub const FOUNDERS_RESERVE: u64 = 270_000;
+pub const MINEABLE_SUPPLY: u64 = MAX_SUPPLY - FOUNDERS_RESERVE;
+/// Number of subsidy-bearing blocks (heights 1..=MINEABLE_BLOCKS)
+pub const MINEABLE_BLOCKS: u64 = MINEABLE_SUPPLY / SUBSIDY; // 354_600 at SUBSIDY=50
+
+/// Height-based subsidy schedule for mainnet (v0):
+/// - height 0 (genesis): 0
+/// - heights 1..=MINEABLE_BLOCKS: SUBSIDY
+/// - after that: 0 (fees only)
+pub fn block_subsidy(height: u64) -> u64 {
+    if height == 0 {
+        0
+    } else if height <= MINEABLE_BLOCKS {
+        SUBSIDY
+    } else {
+        0
+    }
+}
+
 pub fn merkle_root(txs: &[Transaction]) -> Hash32 {
     if txs.is_empty() {
         return Hash32::zero();
@@ -79,5 +101,26 @@ mod tests {
             hex::encode(root.0),
             "f17fa62d5443ba6f40363093a346f426c65a96095c6e88580d263b721a07c20d"
         );
+    }
+
+    #[test]
+    fn emission_schedule_params_locked() {
+        // Gate M1 locked numbers
+        assert_eq!(SUBSIDY, 50);
+        assert_eq!(MAX_SUPPLY, 18_000_000);
+        assert_eq!(FOUNDERS_RESERVE, 270_000);
+        assert_eq!(MINEABLE_SUPPLY, 17_730_000);
+        assert_eq!(MINEABLE_BLOCKS, 354_600);
+
+        // Subsidy schedule checkpoints
+        assert_eq!(block_subsidy(0), 0);
+        assert_eq!(block_subsidy(1), SUBSIDY);
+        assert_eq!(block_subsidy(MINEABLE_BLOCKS), SUBSIDY);
+        assert_eq!(block_subsidy(MINEABLE_BLOCKS + 1), 0);
+
+        // Supply identity
+        let mined = SUBSIDY.saturating_mul(MINEABLE_BLOCKS);
+        assert_eq!(mined, MINEABLE_SUPPLY);
+        assert_eq!(mined + FOUNDERS_RESERVE, MAX_SUPPLY);
     }
 }
