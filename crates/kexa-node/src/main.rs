@@ -7,7 +7,9 @@ use axum::{
 };
 use borsh::BorshDeserialize;
 use clap::Parser;
-use kexa_consensus::{check_pow, merkle_root, COINBASE_MATURITY, DIFFICULTY_BITS, SUBSIDY};
+use kexa_consensus::{
+    block_subsidy, check_pow, merkle_root, COINBASE_MATURITY, DIFFICULTY_BITS, MINEABLE_BLOCKS, SUBSIDY,
+};
 use kexa_p2p::{encode_message, Message, MAX_MESSAGE_SIZE};
 use kexa_proto::{
     tx_signing_hash, verify_tx_signature, Address, Block, BlockHeader, Hash32, OutPoint,
@@ -441,11 +443,12 @@ async fn mine_one_block(state: AppState, miner_address: &str) -> Result<Hash32> 
     for tx in &mempool {
         fee_total = fee_total.saturating_add(calculate_fee(state.clone(), tx).await?);
     }
+    let next_height = height + 1;
     let coinbase = Transaction {
         version: 0,
         inputs: vec![],
         outputs: vec![TxOut {
-            amount: SUBSIDY.saturating_add(fee_total),
+            amount: block_subsidy(next_height).saturating_add(fee_total),
             address: address.payload,
         }],
     };
@@ -461,7 +464,7 @@ async fn mine_one_block(state: AppState, miner_address: &str) -> Result<Hash32> 
         timestamp: now_timestamp(),
         bits: DIFFICULTY_BITS,
         nonce: 0,
-        height: height + 1,
+        height: next_height,
     };
 
     loop {
@@ -614,7 +617,7 @@ fn validate_block(storage: &Storage, block: &Block) -> Result<()> {
             total_fees = total_fees.saturating_add(tx_fee(storage, tx)?);
         }
     }
-    let max_reward = SUBSIDY.saturating_add(total_fees);
+    let max_reward = block_subsidy(block.header.height).saturating_add(total_fees);
     if coinbase_total > max_reward {
         anyhow::bail!("coinbase exceeds subsidy+fees");
     }
@@ -1002,6 +1005,69 @@ mod tests {
         let err = validate_block(&storage, &block).unwrap_err();
         assert!(err.to_string().contains("coinbase exceeds subsidy"));
     }
+    #[test]
+    fn enforces_emission_end_boundary() {
+        let storage = temp_storage();
+        init_genesis(&storage).expect("genesis");
+
+        // height = MINEABLE_BLOCKS: subsidy still allowed
+        let tip_hash1 = Hash32([7u8; 32]);
+        storage.set_tip(MINEABLE_BLOCKS - 1, &tip_hash1).expect("set tip");
+
+        let coinbase_ok = Transaction {
+            version: 0,
+            inputs: vec![],
+            outputs: vec![TxOut {
+                amount: SUBSIDY,
+                address: [1u8; 32],
+            }],
+        };
+        let merkle_ok = merkle_root(std::slice::from_ref(&coinbase_ok));
+        let mut header_ok = BlockHeader {
+            version: 0,
+            prev_hash: tip_hash1,
+            merkle_root: merkle_ok,
+            timestamp: now_timestamp(),
+            bits: DIFFICULTY_BITS,
+            nonce: 0,
+            height: MINEABLE_BLOCKS,
+        };
+        while !check_pow(&header_ok) {
+            header_ok.nonce = header_ok.nonce.wrapping_add(1);
+        }
+        let block_ok = Block { header: header_ok, txs: vec![coinbase_ok] };
+        validate_block(&storage, &block_ok).expect("boundary ok");
+
+        // height = MINEABLE_BLOCKS + 1: subsidy must be 0 (fees only)
+        let tip_hash2 = Hash32([8u8; 32]);
+        storage.set_tip(MINEABLE_BLOCKS, &tip_hash2).expect("set tip");
+
+        let coinbase_bad = Transaction {
+            version: 0,
+            inputs: vec![],
+            outputs: vec![TxOut {
+                amount: 1, // would exceed allowed (0 + fees)
+                address: [2u8; 32],
+            }],
+        };
+        let merkle_bad = merkle_root(std::slice::from_ref(&coinbase_bad));
+        let mut header_bad = BlockHeader {
+            version: 0,
+            prev_hash: tip_hash2,
+            merkle_root: merkle_bad,
+            timestamp: now_timestamp(),
+            bits: DIFFICULTY_BITS,
+            nonce: 0,
+            height: MINEABLE_BLOCKS + 1,
+        };
+        while !check_pow(&header_bad) {
+            header_bad.nonce = header_bad.nonce.wrapping_add(1);
+        }
+        let block_bad = Block { header: header_bad, txs: vec![coinbase_bad] };
+        let err = validate_block(&storage, &block_bad).unwrap_err();
+        assert!(err.to_string().contains("coinbase exceeds subsidy"));
+    }
+
 
     #[tokio::test]
     async fn rejects_unexpected_height_zero_block() {
