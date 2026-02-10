@@ -8,7 +8,8 @@ use axum::{
 use borsh::BorshDeserialize;
 use clap::Parser;
 use kexa_consensus::{
-    block_subsidy, check_pow, merkle_root, COINBASE_MATURITY, DIFFICULTY_BITS, MINEABLE_BLOCKS, SUBSIDY,
+    block_subsidy, check_pow, merkle_root, COINBASE_MATURITY, DIFFICULTY_BITS, MINEABLE_BLOCKS,
+    SUBSIDY,
 };
 use kexa_p2p::{encode_message, Message, MAX_MESSAGE_SIZE};
 use kexa_proto::{
@@ -1012,7 +1013,9 @@ mod tests {
 
         // height = MINEABLE_BLOCKS: subsidy still allowed
         let tip_hash1 = Hash32([7u8; 32]);
-        storage.set_tip(MINEABLE_BLOCKS - 1, &tip_hash1).expect("set tip");
+        storage
+            .set_tip(MINEABLE_BLOCKS - 1, &tip_hash1)
+            .expect("set tip");
 
         let coinbase_ok = Transaction {
             version: 0,
@@ -1035,12 +1038,17 @@ mod tests {
         while !check_pow(&header_ok) {
             header_ok.nonce = header_ok.nonce.wrapping_add(1);
         }
-        let block_ok = Block { header: header_ok, txs: vec![coinbase_ok] };
+        let block_ok = Block {
+            header: header_ok,
+            txs: vec![coinbase_ok],
+        };
         validate_block(&storage, &block_ok).expect("boundary ok");
 
         // height = MINEABLE_BLOCKS + 1: subsidy must be 0 (fees only)
         let tip_hash2 = Hash32([8u8; 32]);
-        storage.set_tip(MINEABLE_BLOCKS, &tip_hash2).expect("set tip");
+        storage
+            .set_tip(MINEABLE_BLOCKS, &tip_hash2)
+            .expect("set tip");
 
         let coinbase_bad = Transaction {
             version: 0,
@@ -1063,11 +1071,13 @@ mod tests {
         while !check_pow(&header_bad) {
             header_bad.nonce = header_bad.nonce.wrapping_add(1);
         }
-        let block_bad = Block { header: header_bad, txs: vec![coinbase_bad] };
+        let block_bad = Block {
+            header: header_bad,
+            txs: vec![coinbase_bad],
+        };
         let err = validate_block(&storage, &block_bad).unwrap_err();
         assert!(err.to_string().contains("coinbase exceeds subsidy"));
     }
-
 
     #[tokio::test]
     async fn rejects_unexpected_height_zero_block() {
