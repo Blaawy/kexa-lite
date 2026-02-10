@@ -1,0 +1,15 @@
+{
+  "network": "mainnet",
+  "header": {
+    "version": 0,
+    "timestamp": 0,
+    "bits": 16,
+    "nonce": 0
+  },
+  "coinbase_outputs": [
+    {
+      "amount": 270000,
+      "address_bech32": "REPLACE_ME"
+    }
+  ]
+}
