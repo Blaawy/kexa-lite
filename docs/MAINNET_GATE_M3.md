@@ -42,3 +42,11 @@ Compare `genesis_hash` output. They must be identical.
 
 ## Final genesis hash
 TBD — set after reserve address is finalized and `genesis/mainnet.json` is locked.
+
+
+## Locked Mainnet Genesis (Gate M3)
+
+- network: mainnet
+- genesis_hash: 692a347dab52762df864509bc9b0972408d9dc778ef0851190b18bb1555e1be5
+- reserve_amount: 270000
+- reserve_address: kexa1gxqcjr9vg2zsal3mj7ve7hfcy8np6sc4q430fphkzuqg88s5lhuslr34jv
