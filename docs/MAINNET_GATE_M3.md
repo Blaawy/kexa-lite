@@ -41,7 +41,6 @@ Compare `genesis_hash` output. They must be identical.
   - `merkle_root` derived from transactions
 
 ## Final genesis hash
-TBD — set after reserve address is finalized and `genesis/mainnet.json` is locked.
 
 
 ## Locked Mainnet Genesis (Gate M3)
