@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  kexa-seed:
+    image: ghcr.io/kexa-org/kexa-node:0.1.0-rc1
+    user: "10001:10001"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid,nodev
+    command:
+      - kexa-node
+      - --network
+      - mainnet
+      - --genesis
+      - /etc/kexa/genesis-mainnet.json
+      - --data-dir
+      - /data/mainnet
+      - --rpc-addr
+      - ${RPC_BIND_HOST:-127.0.0.1}:${RPC_PORT:-18040}
+      - --p2p-addr
+      - 0.0.0.0:${P2P_PORT:-9040}
+      - --peers
+      - ${SEED_PEERS}
+    volumes:
+      - ${GENESIS_MAINNET_PATH:-/etc/kexa/genesis-mainnet.json}:/etc/kexa/genesis-mainnet.json:ro
+      - ${DATA_DIR_MAINNET:-/var/lib/kexa/mainnet}:/data/mainnet
+    ports:
+      - "${P2P_PORT:-9040}:${P2P_PORT:-9040}/tcp"
+      - "127.0.0.1:${RPC_PORT:-18040}:${RPC_PORT:-18040}/tcp"
+    restart: unless-stopped
