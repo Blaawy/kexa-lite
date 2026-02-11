@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function BlockPage({ params }: { params: { hash: string } }) {
   return (
     <section className="space-y-4">
-      <h1 className="text-3xl font-bold">Block Details</h1>
+      <h1 className="text-3xl font-bold text-white">Block Details</h1>
       <BlockDetailView hash={params.hash} />
     </section>
   );

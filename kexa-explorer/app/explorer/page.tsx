@@ -9,7 +9,8 @@ export const metadata: Metadata = {
 export default function ExplorerPage() {
   return (
     <section className="space-y-4">
-      <h1 className="text-3xl font-bold">Explorer Dashboard</h1>
+      <h1 className="text-3xl font-bold text-white">Explorer Dashboard</h1>
+      <p className="text-slate-300">Track latest blocks, network health, and peer activity in real time.</p>
       <ExplorerDashboard />
     </section>
   );
