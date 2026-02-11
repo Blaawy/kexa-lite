@@ -36,7 +36,7 @@ NODE_ARCHIVE="$(ls kexa-node-*-x86_64-linux.tar.gz 2>/dev/null | head -n 1)"
 
 echo "[2/4] unpacking node binary"
 tar -xzf "$NODE_ARCHIVE" -C "$TMP_DIR"
-NODE_BIN="$(find "$TMP_DIR" -type f -name kexa-node | head -n 1)"
+NODE_BIN="$(find "$TMP_DIR" -type f \( -name kexa-node -o -name kexa-node.exe \) | head -n 1)"
 [[ -x "$NODE_BIN" ]] || fail "kexa-node binary not found after unpack"
 
 echo "[3/4] checking locked testnet genesis hash"
