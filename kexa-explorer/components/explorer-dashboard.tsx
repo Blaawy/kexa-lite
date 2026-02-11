@@ -1,73 +1,110 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
+import { formatDistanceToNow } from 'date-fns';
+import { AlertTriangle, Blocks, Network, Shield } from 'lucide-react';
 import { kexaApi } from '@/lib/kexa';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { CopyButton } from '@/components/copy-button';
+import { Skeleton } from '@/components/ui/skeleton';
 
-function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse rounded bg-slate-200 ${className}`} />;
-}
+const hashRegex = /^[a-fA-F0-9]{64}$/;
 
 export function ExplorerDashboard() {
   const router = useRouter();
   const [hash, setHash] = useState('');
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const swrOpts = { refreshInterval: 10000, keepPreviousData: true } as const;
-  const { data: health } = useSWR('health', kexaApi.health, swrOpts);
+  const { data: health, error: healthErr } = useSWR('health', kexaApi.health, swrOpts);
   const { data: tip } = useSWR('tip', kexaApi.tip, swrOpts);
-  const { data: blocks } = useSWR('blocks', () => kexaApi.blocks(20), swrOpts);
+  const { data: blocks, error: blocksErr } = useSWR('blocks', () => kexaApi.blocks(20), swrOpts);
   const { data: peers } = useSWR('livePeers', kexaApi.livePeers, swrOpts);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (hash.trim()) router.push(`/explorer/block/${hash.trim()}`);
+    const value = hash.trim();
+    if (!hashRegex.test(value)) {
+      setSearchError('Enter a valid 64-character hex block hash.');
+      return;
+    }
+    setSearchError(null);
+    router.push(`/explorer/block/${value}`);
   };
+
+  const stats = useMemo(
+    () => [
+      { label: 'Health', value: health?.ok ? 'Healthy' : 'Unknown', icon: Shield },
+      { label: 'Height', value: tip?.height?.toString() ?? '—', icon: Blocks },
+      { label: 'Peers', value: peers?.length?.toString() ?? '—', icon: Network },
+      { label: 'Tip', value: tip?.hash ? `${tip.hash.slice(0, 16)}…` : '—', icon: Blocks },
+    ],
+    [health?.ok, peers?.length, tip?.hash, tip?.height],
+  );
 
   return (
     <div className="space-y-6">
-      <form className="flex gap-2" onSubmit={onSubmit}>
-        <Input value={hash} onChange={(e) => setHash(e.target.value)} placeholder="Paste block hash" />
-        <Button type="submit">Search</Button>
+      <form className="space-y-2" onSubmit={onSubmit}>
+        <div className="flex flex-col gap-2 md:flex-row">
+          <Input
+            value={hash}
+            onChange={(e) => setHash(e.target.value)}
+            placeholder="Search by block hash (64 hex chars)"
+            className="border-white/20 bg-white/5 text-white placeholder:text-slate-400"
+          />
+          <Button type="submit">Search Block</Button>
+        </div>
+        {searchError && <p className="text-sm text-rose-300">{searchError}</p>}
       </form>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card><CardHeader><CardTitle>Health</CardTitle></CardHeader><CardContent>{health ? <Badge className={health.ok ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-red-300 bg-red-50 text-red-700'}>{health.ok ? 'OK' : 'Fail'}</Badge> : <Skeleton className="h-6 w-20" />}</CardContent></Card>
-        <Card><CardHeader><CardTitle>Height</CardTitle></CardHeader><CardContent>{tip ? <span className="font-mono">{tip.height}</span> : <Skeleton className="h-5 w-24" />}</CardContent></Card>
-        <Card><CardHeader><CardTitle>Tip Hash</CardTitle></CardHeader><CardContent>{tip ? <span className="block truncate font-mono text-xs">{tip.hash}</span> : <Skeleton className="h-5 w-32" />}</CardContent></Card>
-        <Card><CardHeader><CardTitle>Live Peers</CardTitle></CardHeader><CardContent>{peers ? <span className="font-mono">{peers.length}</span> : <Skeleton className="h-5 w-10" />}</CardContent></Card>
+        {stats.map((stat) => (
+          <Card key={stat.label}>
+            <CardHeader><CardTitle className="flex items-center gap-2 text-slate-300"><stat.icon className="h-4 w-4 text-cyan-300" />{stat.label}</CardTitle></CardHeader>
+            <CardContent><p className="font-mono text-lg text-white">{stat.value}</p></CardContent>
+          </Card>
+        ))}
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Latest Blocks</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Latest Blocks (auto-refresh 10s)</CardTitle>
+          {blocksErr && <Badge className="border-rose-300/40 bg-rose-400/20 text-rose-100"><AlertTriangle className="mr-1 h-3 w-3" /> Feed unavailable</Badge>}
+        </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Height</TableHead><TableHead>Hash</TableHead><TableHead>Tx</TableHead><TableHead>Timestamp</TableHead>
+                <TableHead>Height</TableHead><TableHead>Hash</TableHead><TableHead>Tx</TableHead><TableHead>Time</TableHead><TableHead className="w-14">Copy</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {blocks
-                ? blocks.map((b) => (
-                    <TableRow key={b.hash}>
-                      <TableCell>{b.height}</TableCell>
-                      <TableCell className="font-mono text-xs"><Link href={`/explorer/block/${b.hash}`} className="hover:underline">{b.hash}</Link></TableCell>
-                      <TableCell>{b.tx_count ?? 0}</TableCell>
-                      <TableCell>{b.timestamp ? String(b.timestamp) : '—'}</TableCell>
-                    </TableRow>
-                  ))
+                ? blocks.map((b) => {
+                    const date = b.timestamp ? new Date(b.timestamp) : null;
+                    return (
+                      <TableRow key={b.hash} className="cursor-pointer" onClick={() => router.push(`/explorer/block/${b.hash}`)}>
+                        <TableCell>{b.height}</TableCell>
+                        <TableCell className="font-mono text-xs"><Link href={`/explorer/block/${b.hash}`} className="hover:text-cyan-200" onClick={(e) => e.stopPropagation()}>{b.hash}</Link></TableCell>
+                        <TableCell>{b.tx_count ?? 0}</TableCell>
+                        <TableCell>{date ? `${formatDistanceToNow(date, { addSuffix: true })}` : '—'}</TableCell>
+                        <TableCell><div onClick={(e) => e.stopPropagation()}><CopyButton value={b.hash} label="Copy block hash" /></div></TableCell>
+                      </TableRow>
+                    );
+                  })
                 : Array.from({ length: 6 }).map((_, i) => (
-                    <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
+                    <TableRow key={i}><TableCell colSpan={5}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
                   ))}
             </TableBody>
           </Table>
+          {(healthErr || blocksErr) && <p className="mt-3 text-sm text-rose-200">Some endpoints failed. Check /verify for quick diagnostics.</p>}
         </CardContent>
       </Card>
     </div>

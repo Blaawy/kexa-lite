@@ -3,15 +3,62 @@
 @tailwind utilities;
 
 :root {
-  --background: 255 255 255;
-  --foreground: 17 24 39;
+  --background: 10 12 22;
+  --foreground: 236 239 255;
+  --muted: 140 154 196;
+  --card: 13 18 34;
+  --border: 90 117 255;
+  --primary: 112 86 255;
+  --accent: 12 211 255;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
   color: rgb(var(--foreground));
   background: rgb(var(--background));
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+.noise-layer {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1px, transparent 0);
+  background-size: 20px 20px;
+  opacity: 0.2;
+}
+
+.glass-panel {
+  @apply border border-white/15 bg-white/5 backdrop-blur-xl;
+  box-shadow: 0 12px 60px rgba(16, 24, 40, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 .code-block {
-  @apply rounded-lg border bg-slate-950 p-4 text-sm text-slate-100;
+  @apply rounded-xl border border-indigo-400/20 bg-[#0a1023]/80 p-4 text-xs text-slate-100;
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }

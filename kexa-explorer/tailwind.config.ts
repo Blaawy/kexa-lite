@@ -9,13 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        border: 'hsl(220 14% 90%)',
-        background: 'hsl(0 0% 100%)',
-        foreground: 'hsl(222 47% 11%)',
-        muted: 'hsl(210 20% 98%)',
-        'muted-foreground': 'hsl(215 16% 47%)',
-        primary: 'hsl(221 83% 53%)',
-        'primary-foreground': 'hsl(210 40% 98%)',
+        border: 'rgb(var(--border) / <alpha-value>)',
+        background: 'rgb(var(--background) / <alpha-value>)',
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
+        muted: 'rgb(var(--muted) / <alpha-value>)',
+        card: 'rgb(var(--card) / <alpha-value>)',
+        primary: 'rgb(var(--primary) / <alpha-value>)',
+        accent: 'rgb(var(--accent) / <alpha-value>)',
+      },
+      boxShadow: {
+        neon: '0 0 20px rgba(102, 126, 234, 0.55)',
       },
     },
   },
