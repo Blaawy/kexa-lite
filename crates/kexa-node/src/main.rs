@@ -36,7 +36,7 @@ use crate::genesis::{
 };
 
 #[derive(Parser, Debug)]
-#[command(name = "kexa-node")]
+#[command(name = "kexa-node", version)]
 struct Args {
     #[arg(long, default_value = "127.0.0.1:8030")]
     rpc_addr: String,

@@ -96,10 +96,37 @@ pub fn build_genesis_from_spec(spec: &GenesisSpec) -> Result<(Block, Hash32)> {
     Ok((block, hash))
 }
 
+fn strip_utf8_bom(raw: &[u8]) -> &[u8] {
+    const UTF8_BOM: &[u8; 3] = b"\xEF\xBB\xBF";
+    if raw.starts_with(UTF8_BOM) {
+        &raw[UTF8_BOM.len()..]
+    } else {
+        raw
+    }
+}
+
 pub fn load_genesis_spec(path: &str) -> Result<GenesisSpec> {
-    let raw = std::fs::read_to_string(path)
-        .with_context(|| format!("failed reading genesis spec: {path}"))?;
-    let spec = serde_json::from_str(&raw)
+    let raw =
+        std::fs::read(path).with_context(|| format!("failed reading genesis spec: {path}"))?;
+    let raw = strip_utf8_bom(&raw);
+    let spec = serde_json::from_slice(raw)
         .with_context(|| format!("failed parsing genesis spec json: {path}"))?;
     Ok(spec)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn strips_utf8_bom_prefix() {
+        let json = b"\xEF\xBB\xBF{\"network\":\"mainnet\"}";
+        assert_eq!(strip_utf8_bom(json), b"{\"network\":\"mainnet\"}");
+    }
+
+    #[test]
+    fn keeps_non_bom_input_unchanged() {
+        let json = b"{\"network\":\"mainnet\"}";
+        assert_eq!(strip_utf8_bom(json), json);
+    }
 }
