@@ -1,0 +1,35 @@
+name: release-rc
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  ci-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: fmt
+        run: cargo fmt --all --check
+
+      - name: clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: test
+        run: cargo test --workspace
+
+      - name: release build
+        run: scripts/release_build.sh
+
+      - name: verify artifacts
+        run: scripts/verify_release_artifacts.sh dist
+
+      - name: upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

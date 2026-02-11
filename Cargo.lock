@@ -957,7 +957,7 @@ dependencies = [
 
 [[package]]
 name = "kexa-cli"
-version = "0.1.0"
+version = "0.1.0-rc1"
 dependencies = [
  "anyhow",
  "clap",
@@ -968,7 +968,7 @@ dependencies = [
 
 [[package]]
 name = "kexa-consensus"
-version = "0.1.0"
+version = "0.1.0-rc1"
 dependencies = [
  "anyhow",
  "hex",
@@ -978,7 +978,7 @@ dependencies = [
 
 [[package]]
 name = "kexa-node"
-version = "0.1.0"
+version = "0.1.0-rc1"
 dependencies = [
  "anyhow",
  "axum",
@@ -1004,7 +1004,7 @@ dependencies = [
 
 [[package]]
 name = "kexa-p2p"
-version = "0.1.0"
+version = "0.1.0-rc1"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1015,7 +1015,7 @@ dependencies = [
 
 [[package]]
 name = "kexa-proto"
-version = "0.1.0"
+version = "0.1.0-rc1"
 dependencies = [
  "bech32",
  "borsh",
@@ -1029,7 +1029,7 @@ dependencies = [
 
 [[package]]
 name = "kexa-storage"
-version = "0.1.0"
+version = "0.1.0-rc1"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1039,7 +1039,7 @@ dependencies = [
 
 [[package]]
 name = "kexa-testkit"
-version = "0.1.0"
+version = "0.1.0-rc1"
 dependencies = [
  "anyhow",
  "ed25519-dalek",
@@ -1056,7 +1056,7 @@ dependencies = [
 
 [[package]]
 name = "kexa-wallet"
-version = "0.1.0"
+version = "0.1.0-rc1"
 dependencies = [
  "anyhow",
  "clap",

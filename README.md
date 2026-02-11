@@ -42,6 +42,9 @@ This command runs:
 - `docs/CONTRIBUTING.md`
 - `docs/ROADMAP.md`
 - `docs/LAUNCH_TESTNET.md`
+- `docs/MAINNET_GATE_M4.md`
+- `docs/UPGRADE_POLICY.md`
+- `CHANGELOG.md`
 
 ## Public Seed Node (Testnet / Seed)
 - Seed address: `193.123.75.158:9030,141.145.159.171:9030`
