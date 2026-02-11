@@ -1,0 +1,22 @@
+[Unit]
+Description=KEXA mainnet seed node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kexa
+Group=kexa
+EnvironmentFile=/etc/kexa/mainnet.env
+ExecStart=/opt/kexa/bin/kexa-node --network mainnet --genesis /etc/kexa/genesis-mainnet.json --data-dir ${DATA_DIR_MAINNET} --rpc-addr ${RPC_BIND_HOST}:${RPC_PORT} --p2p-addr 0.0.0.0:${P2P_PORT} --peers ${SEED_PEERS}
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=${DATA_DIR_MAINNET} /var/log/kexa
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
