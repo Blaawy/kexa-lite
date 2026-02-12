@@ -49,7 +49,7 @@ This command runs:
 
 ## Mainnet Live
 
-- Launch bundle: `docs/mainnet/MAINNET_LIVE.md`
+- Launch bundle: [docs/mainnet/MAINNET_LIVE.md](docs/mainnet/MAINNET_LIVE.md)
 - Explorer: `http://193.123.75.158/`
 - Mainnet seeds (P2P): `193.123.75.158:9040,141.145.159.171:9040`
 - **WARNING:** RPC is localhost-only; do not expose `18040` publicly.

@@ -39,6 +39,11 @@ curl -fsS http://127.0.0.1:18040/peers/live && echo
 
 Expected:
 - all checksums `OK`
+- `--print-genesis` output includes:
+  - genesis hash `692a347dab52762df864509bc9b0972408d9dc778ef0851190b18bb1555e1be5`
+  - timestamp `0`
+  - reserve address `kexa1gxqcjr9vg2zsal3mj7ve7hfcy8np6sc4q430fphkzuqg88s5lhuslr34jv`
+  - reserve amount `270000` (`270,000`)
 - genesis hash equals `692a347dab52762df864509bc9b0972408d9dc778ef0851190b18bb1555e1be5`
 - `/health` returns `ok`
 - `/peers/live` is non-empty
