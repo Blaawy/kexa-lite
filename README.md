@@ -44,7 +44,15 @@ This command runs:
 - `docs/LAUNCH_TESTNET.md`
 - `docs/MAINNET_GATE_M4.md`
 - `docs/UPGRADE_POLICY.md`
+- `docs/mainnet/MAINNET_LIVE.md`
 - `CHANGELOG.md`
+
+## Mainnet Live
+
+- Launch bundle: [docs/mainnet/MAINNET_LIVE.md](docs/mainnet/MAINNET_LIVE.md)
+- Explorer: `http://193.123.75.158/`
+- Mainnet seeds (P2P): `193.123.75.158:9040,141.145.159.171:9040`
+- **WARNING:** RPC is localhost-only; do not expose `18040` publicly.
 
 ## Public Seed Node (Testnet / Seed)
 - Seed address: `193.123.75.158:9030,141.145.159.171:9030`
