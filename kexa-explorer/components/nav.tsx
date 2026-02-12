@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { MAINNET_LIVE_URL } from '@/lib/constants';
 
 const links = [
   { href: '/', label: 'Home' },
@@ -20,23 +21,33 @@ export function TopNav() {
         <Link href="/" className="text-lg font-semibold tracking-tight text-white">
           KEXA <span className="text-cyan-300">Explorer</span>
         </Link>
-        <nav className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 text-sm">
-          {links.map((link) => {
-            const active = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
-            return (
-              <Link
-                key={link.label}
-                href={link.href}
-                className={cn(
-                  'rounded-full px-3 py-1.5 text-slate-300 transition-all hover:text-white',
-                  active && 'bg-indigo-500/20 text-white shadow-neon',
-                )}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="flex items-center gap-3">
+          <a
+            href={MAINNET_LIVE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full border border-cyan-400/50 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200 transition-colors hover:border-cyan-300 hover:text-cyan-100"
+          >
+            Mainnet Live
+          </a>
+          <nav className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 text-sm">
+            {links.map((link) => {
+              const active = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-slate-300 transition-all hover:text-white',
+                    active && 'bg-indigo-500/20 text-white shadow-neon',
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
     </header>
   );

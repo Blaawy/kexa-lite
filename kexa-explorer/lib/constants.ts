@@ -4,3 +4,5 @@ export const MAINNET_CONSTANTS = {
   subsidy: '50',
   mineableBlocks: '354,600',
 };
+
+export const MAINNET_LIVE_URL = process.env.NEXT_PUBLIC_MAINNET_LIVE_URL || 'https://github.com/Blaawy/kexa-lite/releases/tag/v0.1.0-rc1';

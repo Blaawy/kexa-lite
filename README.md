@@ -2,6 +2,15 @@
 
 **KEXA** is an open-source Layer-1 blockchain designed to be simple, verifiable, and operator-friendly.
 
+## MAINNET LIVE (v0.1.0-rc1)
+
+Start here → [Mainnet Live release page](https://github.com/Blaawy/kexa-lite/releases/tag/v0.1.0-rc1); it contains artifacts + SHA256SUMS + proof/verify steps.
+
+- **Canonical release:** https://github.com/Blaawy/kexa-lite/releases/tag/v0.1.0-rc1
+- **Explorer:** http://193.123.75.158/
+- **Seeds (P2P only):** `193.123.75.158:9040` and `141.145.159.171:9040`
+- **Security model reminder:** RPC is localhost-only (`127.0.0.1:18040`); use the explorer proxy model.
+
 KEXA-Lite includes the essentials of a real L1:
 - P2P networking and chain syncing
 - Wallet + transactions + confirmations
@@ -35,6 +44,7 @@ This command runs:
 - `./kexa clean`
 
 ## Docs
+- `docs/README.md`
 - `docs/SPEC_V0.md`
 - `docs/ARCHITECTURE.md`
 - `docs/THREAT_MODEL.md`
