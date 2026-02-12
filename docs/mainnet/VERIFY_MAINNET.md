@@ -34,7 +34,7 @@ If this fails: stop. Do not launch.
 
 ## (B) Genesis identity
 
-Print deterministic genesis:
+Print deteinistic genesis:
 
 ```bash
 kexa-node --network mainnet --genesis /etc/kexa/genesis-mainnet.json --print-genesis
@@ -47,6 +47,11 @@ Confirm these fields/values appear in the output:
 - timestamp = `0`
 - reserve address = `kexa1gxqcjr9vg2zsal3mj7ve7hfcy8np6sc4q430fphkzuqg88s5lhuslr34jv`
 - reserve output amount = `270000` (equivalent to `270,000`)
+Must match all checks:
+- hash = `692a347dab52762df864509bc9b0972408d9dc778ef0851190b18bb1555e1be5`
+- timestamp = `0`
+- reserve output includes `270000` to `kexa1gxqcjr9vg2zsal3mj7ve7hfcy8np6sc4q430fphkzuqg88s5lhuslr34jv`
+
 
 Optional frozen testnet baseline check:
 
