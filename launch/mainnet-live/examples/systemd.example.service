@@ -1,0 +1,20 @@
+[Unit]
+Description=KEXA Mainnet Node (example)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kexa
+Group=kexa
+ExecStart=/opt/kexa/bin/kexa-node --network mainnet --genesis /etc/kexa/genesis-mainnet.json --rpc-addr 127.0.0.1:18040 --p2p-addr 0.0.0.0:9040 --data-dir /var/lib/kexa/mainnet --peers "193.123.75.158:9040,141.145.159.171:9040"
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/kexa/mainnet
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
